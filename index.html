@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Astra's Photo Star</title>
+<meta name="description" content="Put your favorite photos in a fat neon star and download your photo star. Your photos never leave your device.">
+<link rel="icon" href="assets/fat-star-frame.svg" type="image/svg+xml">
+<!--
+  Astra's Photo Star: make your own photo star. Choose photos, drag each one until it sits right in the fat star, and
+  download a PNG or an SVG that fades from one photo to the next. Everything happens in this page: nothing is uploaded.
+  By Astra. Built with Claude Opus 5.5 (claude-opus-5-5), 2026-10-19.
+-->
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:dark;font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;color:#ecebf0;background:#26272b;
+  --card:#303136;--line:#45464d;--muted:#a9a8b3;--pink:#ff5fd2;--violet:#b388ff;--cyan:#3ff3ff}
+body{margin:0;background:#26272b}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--cyan)}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.window{max-width:460px;margin:24px auto;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 10px 40px #0006}
+.head{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.head img{width:64px;height:auto;flex:none}
+h1{margin:0;font-size:24px;letter-spacing:-.02em;line-height:1.15}
+.sub{margin:2px 0 0;color:var(--muted);font-size:13px}
+.stage{position:relative;border-radius:14px;background:#1b1c1f;overflow:hidden;touch-action:pan-y;user-select:none;border:1px solid var(--line)}
+.stage.has-photo{touch-action:none;cursor:grab}
+.stage.dragging{cursor:grabbing}
+.stage.over{border-color:var(--cyan)}
+.stage canvas{display:block;width:100%}
+.stage-empty{position:absolute;inset:0;display:grid;place-items:center;margin:0;text-align:center;color:var(--muted);padding:20px;pointer-events:none}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.button,.primary,.ghost{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:11px;padding:8px 13px;border:1px solid var(--line);background:#3a3b41;font-weight:600}
+.primary{border:0;background:linear-gradient(135deg,var(--pink),var(--violet));color:#1b1020}
+.primary:disabled,.ghost:disabled,.button:disabled{opacity:.4;cursor:default}
+.ghost{background:transparent}
+.grow{flex:1}
+.zoom{display:flex;align-items:center;gap:8px;flex:1 1 140px;color:var(--muted);font-size:13px}
+.zoom input{flex:1;accent-color:var(--pink)}
+.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+h2{font-size:14px;margin:16px 0 8px;color:var(--muted);font-weight:600}
+.strip{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
+.strip li{position:relative}
+.strip button.pick{padding:0;border:2px solid transparent;border-radius:10px;background:none;display:block}
+.strip button.pick[aria-pressed="true"]{border-color:var(--cyan)}
+.strip svg{width:58px;height:auto;display:block}
+.strip .x{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:#26272b;font-size:13px;line-height:1;padding:0}
+.empty{color:var(--muted);font-size:13px;margin:0}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatch{border-radius:999px;padding:5px 12px;border:1px solid var(--line);background:#26272b;font-size:13px}
+.swatch[aria-pressed="true"]{border-color:var(--pink);box-shadow:0 0 0 1px var(--pink) inset}
+.swatch i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.preview{display:grid;place-items:center;background:#1b1c1f;border-radius:14px;padding:14px;border:1px solid var(--line);margin-top:10px}
+.preview img{width:min(100%,220px);height:auto}
+.seconds{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.seconds input{width:64px;background:#26272b;border:1px solid var(--line);border-radius:9px;padding:5px 7px}
+.foot{font-size:13px;color:var(--muted);margin-top:16px}
+.foot p{margin:6px 0}
+.toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);max-width:min(92vw,460px);background:#1b1c1f;border:1px solid var(--violet);border-radius:12px;padding:10px 14px;font-size:14px;z-index:10}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main class="window">
+  <section class="card" aria-labelledby="title">
+    <div class="head">
+      <img id="astras-star" src="https://findastra.github.io/astras-star-window/star-window.svg" alt="Astra's own photo star" width="64" height="61">
+      <div>
+        <h1 id="title">Astra's Photo Star</h1>
+        <p class="sub">Put your favorite photos in a fat star. They never leave your device.</p>
+      </div>
+    </div>
+
+    <div class="stage" id="stage" tabindex="0" role="application" aria-label="The fat star. Drag the photo to move it; arrow keys nudge it, plus and minus zoom.">
+      <canvas id="canvas"></canvas>
+      <p class="stage-empty" id="stage-empty">Choose a photo, or drop one here.</p>
+    </div>
+    <div class="row">
+      <label class="button" for="file">Choose a photo</label>
+      <input type="file" id="file" accept="image/*" hidden>
+      <label class="zoom">Zoom <input type="range" id="zoom" min="0" max="1000" value="500" disabled aria-label="Zoom"></label>
+      <button type="button" class="ghost" id="fit" disabled>Fit</button>
+    </div>
+    <div class="row"><button type="button" class="primary grow" id="add" disabled>Add to my star</button></div>
+    <p class="hint">Drag to move · scroll or pinch to zoom · only what is inside the star is kept.</p>
+
+    <h2>In my star</h2>
+    <ul class="strip" id="strip"></ul>
+    <p class="empty" id="strip-empty">No photos yet. Add one, or a few: they fade from one to the next.</p>
+    <div class="row" id="timing" hidden><label class="seconds">Seconds each <input type="number" id="seconds" min="2" max="30" step="0.5" value="5"></label></div>
+
+    <h2>Outline</h2>
+    <div class="swatches" id="swatches" role="group" aria-label="Outline"></div>
+
+    <div class="preview"><img id="preview" alt="Preview of my photo star"></div>
+    <div class="row">
+      <button type="button" class="primary grow" id="png" disabled>Download PNG</button>
+      <button type="button" class="button grow" id="svg" disabled>Download SVG</button>
+    </div>
+    <p class="hint" id="what-png">PNG: the photo you picked above, see-through around the star. SVG: all of them, fading from one to the next. It works in a GitHub README and on websites.</p>
+
+    <div class="foot">
+      <p><b>Free star assets:</b> <a href="assets/fat-star-frame.svg" download>frame (SVG)</a> · <a href="assets/fat-star-frame.png" download>frame (PNG)</a> · <a href="assets/fat-star-shape.svg" download>shape (SVG)</a> · <a href="assets/fat-star-shape.png" download>shape (PNG)</a></p>
+      <p><b>On your GitHub profile:</b> put your SVG in your profile repo, then add <code>&lt;img align="right" width="160" src="photo-star.svg"&gt;</code> above your title.</p>
+      <p>By Astra · <a href="https://github.com/findastra/astras-photo-star">source and downloads</a></p>
+    </div>
+  </section>
+</main>
+<p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+
+<script type="module">
+import { frame, buildSvg, coverPlace, drawPlaced, OUTLINES } from './photo-star-lib-20261019.js';
+
+const OUT_W = 720;          // each photo is cut to this many pixels wide
+const MARGIN = 150;         // frame units of photo shown (dimmed) around the star while placing
+const F = frame();
+const $ = (s) => document.querySelector(s);
+
+const pics = [];            // { id, url (JPEG data URL), alt }
+let picked = 0;             // which picture the PNG is made from
+let outline = 'neon';
+let photo = null, place = null;
+
+let toastTimer;
+function say(text) { const t = $('#toast'); t.textContent = text; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 6000); }
+function save(blob, name) { const a = document.createElement('a'), u = URL.createObjectURL(blob); a.href = u; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); }
+$('#astras-star').addEventListener('error', (e) => { e.target.hidden = true; });
+
+// ---------- the stage ----------
+const stage = $('#stage'), canvas = $('#canvas'), ctx = canvas.getContext('2d');
+const starPath = new Path2D(F.path);
+const outside = new Path2D(`M${-MARGIN} ${-MARGIN}H${F.width + MARGIN}V${F.height + MARGIN}H${-MARGIN}Z${F.path}`);
+const view = () => { const w = stage.clientWidth || 400; const k = w / (F.width + 2 * MARGIN); return { w, h: (F.height + 2 * MARGIN) * k, k }; };
+let zoomMin = 0.1, zoomMax = 10;
+function gradient(c, colors) {
+  const g = c.createLinearGradient(0, 0, F.width, F.height);
+  colors.forEach((col, i) => g.addColorStop(colors.length > 1 ? i / (colors.length - 1) : 0, col));
+  return g;
+}
+function draw() {
+  const { w, h, k } = view(), dpr = window.devicePixelRatio || 1;
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); canvas.style.height = `${h}px`; }
+  ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * k * MARGIN, dpr * k * MARGIN);
+  ctx.fillStyle = '#1b1c1f'; ctx.fillRect(-MARGIN, -MARGIN, F.width + 2 * MARGIN, F.height + 2 * MARGIN);
+  ctx.fillStyle = '#26272b'; ctx.fill(starPath);
+  if (photo) { const pw = photo.width * place.zoom, ph = photo.height * place.zoom; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(photo.img, place.x - pw / 2, place.y - ph / 2, pw, ph); }
+  ctx.fillStyle = 'rgba(22,22,26,.72)'; ctx.fill(outside, 'evenodd');
+  const cols = OUTLINES[outline].length ? OUTLINES[outline] : ['#77767f'];
+  ctx.strokeStyle = gradient(ctx, cols); ctx.lineWidth = 10; ctx.lineJoin = 'round'; ctx.stroke(starPath);
+}
+const sliderOf = (z) => Math.round((Math.log(z / zoomMin) / Math.log(zoomMax / zoomMin)) * 1000);
+function setZoom(z, at = { x: F.width / 2, y: F.height / 2 }) {
+  const nz = Math.min(zoomMax, Math.max(zoomMin, z)), f = nz / place.zoom;
+  place.x = at.x + (place.x - at.x) * f; place.y = at.y + (place.y - at.y) * f; place.zoom = nz;
+  $('#zoom').value = sliderOf(nz); draw();
+}
+function framePoint(e) { const r = stage.getBoundingClientRect(), { k } = view(); return { x: (e.clientX - r.left) / k - MARGIN, y: (e.clientY - r.top) / k - MARGIN }; }
+const pointers = new Map();
+stage.addEventListener('pointerdown', (e) => { if (!photo) return; stage.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); stage.classList.add('dragging'); });
+stage.addEventListener('pointermove', (e) => {
+  const prev = pointers.get(e.pointerId);
+  if (!prev || !photo) return;
+  const { k } = view();
+  if (pointers.size === 1) { place.x += (e.clientX - prev.x) / k; place.y += (e.clientY - prev.y) / k; pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); draw(); return; }
+  const [a, b] = [...pointers.values()];
+  const before = Math.hypot(a.x - b.x, a.y - b.y);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const [c, d] = [...pointers.values()];
+  const after = Math.hypot(c.x - d.x, c.y - d.y);
+  place.x += ((c.x + d.x) / 2 - (a.x + b.x) / 2) / k; place.y += ((c.y + d.y) / 2 - (a.y + b.y) / 2) / k;
+  if (before > 0) setZoom(place.zoom * (after / before), framePoint({ clientX: (c.x + d.x) / 2, clientY: (c.y + d.y) / 2 })); else draw();
+});
+const lift = (e) => { pointers.delete(e.pointerId); if (!pointers.size) stage.classList.remove('dragging'); };
+stage.addEventListener('pointerup', lift); stage.addEventListener('pointercancel', lift);
+stage.addEventListener('wheel', (e) => { if (!photo) return; e.preventDefault(); setZoom(place.zoom * Math.exp(-e.deltaY * 0.0015), framePoint(e)); }, { passive: false });
+stage.addEventListener('keydown', (e) => {
+  if (!photo) return;
+  const step = e.shiftKey ? 40 : 10, moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+  if (moves[e.key]) { place.x += moves[e.key][0]; place.y += moves[e.key][1]; draw(); e.preventDefault(); }
+  else if (e.key === '+' || e.key === '=') { setZoom(place.zoom * 1.08); e.preventDefault(); }
+  else if (e.key === '-' || e.key === '_') { setZoom(place.zoom / 1.08); e.preventDefault(); }
+});
+$('#zoom').addEventListener('input', (e) => setZoom(zoomMin * (zoomMax / zoomMin) ** (e.target.value / 1000)));
+$('#fit').onclick = () => { if (!photo) return; place = coverPlace(photo.width, photo.height); $('#zoom').value = sliderOf(place.zoom); draw(); };
+new ResizeObserver(draw).observe(stage);
+
+// ---------- photos in ----------
+async function usePhoto(blob, name) {
+  if (!blob || !/^image\//.test(blob.type)) { say('That is not a picture. Choose a PNG, JPG or WebP.'); return; }
+  let img;
+  try { img = await createImageBitmap(blob); } catch { say('This browser could not open that picture.'); return; }
+  photo = { img, width: img.width, height: img.height, name: name || 'photo' };
+  place = coverPlace(img.width, img.height);
+  zoomMin = place.zoom * 0.25; zoomMax = place.zoom * 8;
+  $('#zoom').value = sliderOf(place.zoom);
+  $('#stage-empty').hidden = true; stage.classList.add('has-photo');
+  ['#zoom', '#fit', '#add'].forEach((s) => { $(s).disabled = false; });
+  draw(); stage.focus({ preventScroll: true });
+}
+$('#file').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) usePhoto(f, f.name); });
+stage.addEventListener('dragover', (e) => { e.preventDefault(); stage.classList.add('over'); });
+stage.addEventListener('dragleave', () => stage.classList.remove('over'));
+stage.addEventListener('drop', (e) => { e.preventDefault(); stage.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) usePhoto(f, f.name); });
+document.addEventListener('paste', (e) => { const f = [...(e.clipboardData?.files || [])].find((x) => x.type.startsWith('image/')); if (f) usePhoto(f, f.name || 'pasted photo'); });
+
+// ---------- my star ----------
+function add() {
+  if (!photo) return;
+  const c = document.createElement('canvas');
+  c.width = OUT_W; c.height = Math.round((F.height * OUT_W) / F.width);
+  drawPlaced(c.getContext('2d'), photo.img, photo.width, photo.height, place, OUT_W);
+  pics.push({ id: Math.random().toString(36).slice(2, 8), url: c.toDataURL('image/jpeg', 0.88), alt: 'A photo in a fat star' });
+  picked = pics.length - 1;
+  photo = null; place = null;
+  $('#stage-empty').hidden = false; stage.classList.remove('has-photo');
+  ['#zoom', '#fit', '#add'].forEach((s) => { $(s).disabled = true; });
+  draw(); render();
+  say(pics.length > 1 ? `${pics.length} photos in your star. They fade from one to the next.` : 'In your star. Add more, or download it.');
+}
+$('#add').onclick = add;
+
+const NS = 'http://www.w3.org/2000/svg';
+function thumb(p, i) {
+  const s = document.createElementNS(NS, 'svg'); s.setAttribute('viewBox', `0 0 ${F.width} ${F.height}`); s.setAttribute('aria-hidden', 'true');
+  const cp = document.createElementNS(NS, 'clipPath'); cp.id = `t-${p.id}`;
+  const path = document.createElementNS(NS, 'path'); path.setAttribute('d', F.path); cp.append(path);
+  const im = document.createElementNS(NS, 'image'); im.setAttribute('href', p.url); im.setAttribute('width', F.width); im.setAttribute('height', F.height); im.setAttribute('clip-path', `url(#t-${p.id})`);
+  s.append(cp, im);
+  return s;
+}
+function svgText() { return buildSvg({ seconds: Number($('#seconds').value) || 5, outline: OUTLINES[outline] }, pics.map((p) => ({ href: p.url, alt: p.alt }))); }
+let previewUrl = null;
+function render() {
+  const strip = $('#strip'); strip.textContent = '';
+  pics.forEach((p, i) => {
+    const li = document.createElement('li');
+    const pick = document.createElement('button'); pick.type = 'button'; pick.className = 'pick'; pick.setAttribute('aria-pressed', String(i === picked));
+    pick.setAttribute('aria-label', `Photo ${i + 1}${i === picked ? ', used for the PNG' : ''}`); pick.append(thumb(p, i));
+    pick.onclick = () => { picked = i; render(); };
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.textContent = '×'; x.setAttribute('aria-label', `Remove photo ${i + 1}`);
+    x.onclick = () => { pics.splice(i, 1); picked = Math.min(picked, Math.max(0, pics.length - 1)); render(); };
+    li.append(pick, x); strip.append(li);
+  });
+  $('#strip-empty').hidden = pics.length > 0;
+  $('#timing').hidden = pics.length < 2;
+  $('#png').disabled = $('#svg').disabled = !pics.length;
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  previewUrl = URL.createObjectURL(new Blob([svgText()], { type: 'image/svg+xml' }));
+  $('#preview').src = previewUrl;
+}
+$('#seconds').addEventListener('change', render);
+
+const swatches = $('#swatches');
+for (const [name, cols] of Object.entries(OUTLINES)) {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'swatch'; b.dataset.outline = name;
+  const dot = document.createElement('i'); dot.style.background = cols.length ? `linear-gradient(135deg,${cols.join(',')})` : 'transparent'; dot.style.border = cols.length ? '0' : '1px dashed #77767f';
+  b.append(dot, name[0].toUpperCase() + name.slice(1));
+  b.onclick = () => { outline = name; [...swatches.children].forEach((s) => s.setAttribute('aria-pressed', String(s === b))); draw(); render(); };
+  b.setAttribute('aria-pressed', String(name === outline));
+  swatches.append(b);
+}
+
+// ---------- downloads ----------
+$('#svg').onclick = () => { save(new Blob([svgText()], { type: 'image/svg+xml' }), 'photo-star.svg'); say('Saved photo-star.svg.'); };
+$('#png').onclick = async () => {
+  const p = pics[picked]; if (!p) return;
+  const W = OUT_W, H = Math.round((F.height * W) / F.width), k = W / F.width;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d'); g.setTransform(k, 0, 0, k, 0, 0);
+  const img = await createImageBitmap(await (await fetch(p.url)).blob());
+  g.save(); g.clip(starPath); g.drawImage(img, 0, 0, F.width, F.height); g.restore();
+  const cols = OUTLINES[outline];
+  if (cols.length) {
+    g.lineJoin = 'round'; g.strokeStyle = gradient(g, cols);
+    g.save(); g.globalAlpha = 0.55; g.lineWidth = 22; g.shadowColor = cols[Math.floor(cols.length / 2)]; g.shadowBlur = 18 * k; g.stroke(starPath); g.restore();
+    g.lineWidth = 10; g.stroke(starPath);
+  }
+  c.toBlob((b) => { save(b, 'photo-star.png'); say('Saved photo-star.png.'); }, 'image/png');
+};
+
+globalThis.PhotoStar = { usePhoto, add, setPlace: (p) => { place = { ...p }; draw(); }, get count() { return pics.length; }, svg: svgText };
+render(); draw();
+</script>
+</body>
+</html>

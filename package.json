@@ -1,0 +1,11 @@
+{
+  "name": "astras-photo-star",
+  "private": true,
+  "type": "module",
+  "description": "Astra's Photo Star: put your favorite photos in a fat neon star and download it.",
+  "scripts": {
+    "build": "node scripts/build-assets-20261019.mjs",
+    "test": "node --test"
+  },
+  "license": "MIT"
+}

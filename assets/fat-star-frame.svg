@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 958" width="1000" height="958">
+<title>Fat star frame, by Astra</title>
+<defs><linearGradient id="neon" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff5fd2"/><stop offset="50%" stop-color="#b388ff"/><stop offset="100%" stop-color="#3ff3ff"/></linearGradient>
+<filter id="glow" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="9"/></filter></defs>
+<path d="M457.9 64.7Q500 3.3 542.1 64.7L659.3 235.7Q683.1 270.4 723.5 282.4L922.3 341Q993.8 362 948.4 421.1L821.9 585.4Q796.3 618.7 797.4 660.8L803.1 868Q805.2 942.5 735 917.6L539.7 848.1Q500 834 460.3 848.1L265 917.6Q194.8 942.5 196.9 868L202.6 660.8Q203.7 618.7 178.1 585.4L51.6 421.1Q6.2 362 77.7 341L276.5 282.4Q316.9 270.4 340.7 235.7Z" fill="none" stroke="url(#neon)" stroke-width="22" opacity="0.55" filter="url(#glow)"/>
+<path d="M457.9 64.7Q500 3.3 542.1 64.7L659.3 235.7Q683.1 270.4 723.5 282.4L922.3 341Q993.8 362 948.4 421.1L821.9 585.4Q796.3 618.7 797.4 660.8L803.1 868Q805.2 942.5 735 917.6L539.7 848.1Q500 834 460.3 848.1L265 917.6Q194.8 942.5 196.9 868L202.6 660.8Q203.7 618.7 178.1 585.4L51.6 421.1Q6.2 362 77.7 341L276.5 282.4Q316.9 270.4 340.7 235.7Z" fill="none" stroke="url(#neon)" stroke-width="10" stroke-linejoin="round"/>
+</svg>
