@@ -1,4 +1,4 @@
-# Astra's Photo Star
+# Astra's Photostar
 
 By Astra
 
