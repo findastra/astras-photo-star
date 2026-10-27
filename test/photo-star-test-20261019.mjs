@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { buildSvg, frame, keyframes, OUTLINES, UNIT } from '../photo-star-lib-20261019.js';
+import { buildSvg, frame, keyframes, OUTLINES, UNIT } from '../photostar-lib-20261019.js';
 import { assets, ROOT } from '../scripts/build-assets-20261019.mjs';
 
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
@@ -51,7 +51,7 @@ test('the star is never see-through while the photos fade', () => {
 
 test('the maker loads only its own files, and offers the assets', () => {
   const page = read('index.html');
-  assert.match(page, /from '\.\/photo-star-lib-20261019\.js'/);
+  assert.match(page, /from '\.\/photostar-lib-20261019\.js'/);
   for (const a of ['fat-star-frame.svg', 'fat-star-frame.png', 'fat-star-shape.svg', 'fat-star-shape.png']) assert.ok(page.includes(`assets/${a}`), a);
   assert.doesNotMatch(page, /api\.github\.com|fetch\(['"`]http/, 'nothing is uploaded or fetched from elsewhere');
 });
