@@ -104,15 +104,15 @@ h2{font-size:14px;margin:16px 0 8px;color:var(--muted);font-weight:600}
 
     <div class="foot">
       <p><b>Free star assets:</b> <a href="assets/fat-star-frame.svg" download>frame (SVG)</a> · <a href="assets/fat-star-frame.png" download>frame (PNG)</a> · <a href="assets/fat-star-shape.svg" download>shape (SVG)</a> · <a href="assets/fat-star-shape.png" download>shape (PNG)</a></p>
-      <p><b>On your GitHub profile:</b> put your SVG in your profile repo, then add <code>&lt;img align="right" width="160" src="photo-star.svg"&gt;</code> above your title.</p>
-      <p>By Astra · <a href="https://github.com/findastra/astras-photo-star">source and downloads</a></p>
+      <p><b>On your GitHub profile:</b> put your SVG in your profile repo, then add <code>&lt;img align="right" width="160" src="photostar.svg"&gt;</code> above your title.</p>
+      <p>By Astra · <a href="https://github.com/findastra/astras-photostar">source and downloads</a></p>
     </div>
   </section>
 </main>
 <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
 
 <script type="module">
-import { frame, buildSvg, coverPlace, drawPlaced, OUTLINES } from './photo-star-lib-20261019.js';
+import { frame, buildSvg, coverPlace, drawPlaced, OUTLINES } from './photostar-lib-20261019.js';
 
 const OUT_W = 720;          // each photo is cut to this many pixels wide
 const MARGIN = 150;         // frame units of photo shown (dimmed) around the star while placing
@@ -264,7 +264,7 @@ for (const [name, cols] of Object.entries(OUTLINES)) {
 }
 
 // ---------- downloads ----------
-$('#svg').onclick = () => { save(new Blob([svgText()], { type: 'image/svg+xml' }), 'photo-star.svg'); say('Saved photo-star.svg.'); };
+$('#svg').onclick = () => { save(new Blob([svgText()], { type: 'image/svg+xml' }), 'photostar.svg'); say('Saved photostar.svg.'); };
 $('#png').onclick = async () => {
   const p = pics[picked]; if (!p) return;
   const W = OUT_W, H = Math.round((F.height * W) / F.width), k = W / F.width;
@@ -278,7 +278,7 @@ $('#png').onclick = async () => {
     g.save(); g.globalAlpha = 0.55; g.lineWidth = 22; g.shadowColor = cols[Math.floor(cols.length / 2)]; g.shadowBlur = 18 * k; g.stroke(starPath); g.restore();
     g.lineWidth = 10; g.stroke(starPath);
   }
-  c.toBlob((b) => { save(b, 'photo-star.png'); say('Saved photo-star.png.'); }, 'image/png');
+  c.toBlob((b) => { save(b, 'photostar.png'); say('Saved photostar.png.'); }, 'image/png');
 };
 
 globalThis.PhotoStar = { usePhoto, add, setPlace: (p) => { place = { ...p }; draw(); }, get count() { return pics.length; }, svg: svgText };
