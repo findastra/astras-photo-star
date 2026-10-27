@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { frame, OUTLINES } from '../photo-star-lib-20261019.js';
+import { frame, OUTLINES } from '../photostar-lib-20261019.js';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
